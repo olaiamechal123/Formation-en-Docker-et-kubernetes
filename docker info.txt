@@ -1,0 +1,99 @@
+# Virtualisation et Conteneurisation : Concepts et Technologies Clés
+
+La **virtualisation** et la **conteneurisation** sont deux technologies fondamentales en informatique moderne. Elles permettent d'optimiser l'utilisation des ressources, d'améliorer la portabilité et de faciliter la gestion des applications.
+
+## 1. Rappels sur les Systèmes Informatiques
+
+Un système informatique est composé de :
+- **Hardware** : processeur (CPU), mémoire, stockage, carte mère, etc.
+- **Software** : système d'exploitation (OS) + logiciels applicatifs.
+
+Les machines physiques présentent plusieurs limitations :
+- Coût élevé
+- Besoin d'investissements importants pour ajouter des tâches / capacités
+- Maintenance complexe de plusieurs serveurs physiques
+
+## 2. La Virtualisation
+
+La **virtualisation** est le processus de création d'une version virtuelle d'une ressource informatique (serveur, stockage, réseau, etc.).
+
+### Machine Virtuelle (VM)
+- Une **machine virtuelle** est un ordinateur simulé à l'intérieur d'un ordinateur physique (hôte).
+- Chaque VM possède :
+  - Son propre système d'exploitation
+  - Ses propres applications
+  - Ses propres ressources virtuelles (CPU, RAM, disque, etc.)
+- Plusieurs VMs peuvent s'exécuter simultanément sur la même machine hôte.
+- Elles fonctionnent de manière **indépendante** et isolée les unes des autres.
+
+### Niveaux de Virtualisation
+- Virtualisation complète : système informatique entier (hardware + software)
+- Virtualisation partielle : composants spécifiques (stockage, réseau, OS, etc.)
+
+### Avantages
+- Meilleure utilisation des ressources
+- Isolation forte
+- Facilité de migration et de sauvegarde
+
+### Exemples d'outils
+- Oracle VM VirtualBox
+- VMware
+- Hyper-V
+- KVM
+
+**Note** : La virtualisation d'un système d'exploitation entier est parfois confondue avec la conteneurisation, mais elles sont différentes (voir comparaison ci-dessous).
+
+## 3. La Conteneurisation
+
+La **conteneurisation** est une forme de virtualisation **légère** au niveau applicatif.
+
+### Qu'est-ce qu'un conteneur ?
+- Un conteneur fournit un environnement isolé pour exécuter une application.
+- Il contient tout ce qui est nécessaire au fonctionnement de l'application :
+  - Code source
+  - Dépendances / bibliothèques
+  - Configurations
+  - Variables d'environnement
+- Les conteneurs partagent le **noyau (kernel)** du système d'exploitation hôte → plus léger qu'une VM.
+
+### Différence clé : Virtualisation vs Conteneurisation
+
+| Aspect                  | Virtualisation (VM)                  | Conteneurisation                     |
+|-------------------------|--------------------------------------|--------------------------------------|
+| Niveau d'isolation      | Complète (OS invité complet)         | Processus / application              |
+| Système d'exploitation  | Chaque VM a son propre OS            | Tous partagent le kernel de l'hôte   |
+| Ressources consommées   | Élevé (overhead OS)                  | Faible (léger)                       |
+| Temps de démarrage      | Lent (boot OS)                       | Très rapide (secondes)               |
+| Densité                 | Moins de VMs par hôte                | Beaucoup plus de conteneurs par hôte |
+| Isolation               | Très forte                           | Bonne (mais moins que VM)            |
+| Portabilité             | Bonne                                | Excellente                           |
+
+## 4. Docker : La Référence en Conteneurisation
+
+**Docker** est la plateforme la plus populaire pour créer, distribuer et exécuter des conteneurs.
+
+### Architecture Docker
+- **Docker Engine** : application client-serveur
+  - **Docker CLI** : interface en ligne de commande (commandes texte)
+  - **Docker Daemon** (dockerd) : service principal qui gère la création, l'exécution et la gestion des objets Docker
+
+### Objets principaux Docker
+- **Image Docker** : modèle / template immuable (comme une photo d'un conteneur)
+- **Conteneur Docker** : instance exécutable créée à partir d'une image
+
+### Dockerfile
+Fichier texte qui définit comment construire une image Docker.
+
+Instructions courantes :
+- `FROM` : image de base (ex. : `FROM ubuntu:22.04`)
+- `COPY` : copie des fichiers/dossiers de l'hôte vers le conteneur
+- `RUN` : exécute une commande pendant la construction
+- `WORKDIR` : définit le répertoire de travail
+- `EXPOSE` : indique les ports à exposer
+- `ENTRYPOINT` : commande principale exécutée au démarrage
+- `CMD` : arguments par défaut (ou commande si pas d'ENTRYPOINT)
+
+Commandes typiques :
+```bash
+docker build -t mon-image .          # Construit l'image à partir du Dockerfile
+docker run -d -p 8080:80 mon-image   # Lance un conteneur

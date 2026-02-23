@@ -1,0 +1,85 @@
+# ☸️ Kubernetes : Guide de l'Orchestration Modernisé
+
+Ce dépôt contient un résumé complet des concepts fondamentaux de Kubernetes (K8s), allant de l'architecture de base aux pipelines de données et au MLOps.
+
+---
+
+## 📖 Sommaire
+1. [Concepts de Base](#concepts-de-base)
+2. [Architecture du Cluster](#architecture-du-cluster)
+3. [Gestion des Objets & Manifestes](#gestion-des-objets--manifestes)
+4. [Stockage Persistant](#stockage-persistant)
+5. [Réseautage et Sécurité](#réseautage-et-sécurité)
+6. [Data Pipelines & MLOps](#data-pipelines--mlops)
+
+---
+
+## 🚀 Concepts de Base
+Kubernetes automatise la gestion des conteneurs en interagissant avec les **moteurs de conteneurs**. 
+- **Auto-healing** : Gère les conteneurs qui s'arrêtent ou échouent.
+- **Abstraction** : L'utilisateur définit l'état souhaité, Kubernetes s'occupe de la réalisation technique.
+
+## 🏗️ Architecture du Cluster
+Un environnement Kubernetes est structuré en plusieurs entités :
+* **Control Plane** : Le cerveau du cluster qui prend les décisions.
+* **Nodes (Nœuds)** : Machines (VM ou physiques) où tournent les applications.
+* **Pods** : La plus petite unité ; ils s'exécutent sur les nœuds.
+
+
+
+---
+
+## 📄 Gestion des Objets & Manifestes
+Les objets sont décrits via des fichiers **YAML** appelés manifestes.
+
+### Structure d'un Manifeste
+1.  **apiVersion** : Version de l'API K8s.
+2.  **kind** : Type d'objet (Pod, Deployment, Service, StatefulSet).
+3.  **metadata** : Infos sur la ressource (nom, labels).
+4.  **spec** : État désiré (nombre de réplicas, images, ports).
+
+### Commandes Essentielles (`kubectl`)
+| Action | Commande |
+| :--- | :--- |
+| **Créer/Mettre à jour** | `kubectl apply -f manifest.yml` |
+| **Lister les objets** | `kubectl get [objet]` |
+| **Inspecter** | `kubectl describe [objet] [nom]` |
+| **Mise à l'échelle** | `kubectl scale deployment [nom] --replicas=[n]` |
+
+---
+
+## 💾 Stockage Persistant
+Pour les applications avec état (**Stateful**), Kubernetes sépare le calcul du stockage.
+
+* **PV (Persistent Volume)** : Ressources de stockage réelles.
+* **PVC (Persistent Volume Claim)** : Demande de stockage faite par un pod.
+* **StorageClass (SC)** : Permet le provisionnement dynamique (automatique) du stockage.
+
+> 💡 **Note** : Les données dans un PV survivent même si le pod est supprimé ou redémarré.
+
+---
+
+## 🌐 Réseautage et Sécurité
+* **Labels & Selectors** : Système de clés/valeurs pour organiser et cibler les objets.
+* **Service** : Offre une adresse IP stable et gère le **Load Balancing**.
+* **Ingress** : Gère les accès HTTP/HTTPS externes.
+* **Secrets** : Stockage sécurisé des données sensibles (mots de passe, tokens).
+
+---
+
+## 📊 Data Pipelines & MLOps
+Kubernetes est idéal pour les flux de données grâce à sa scalabilité.
+
+### Écosystème Data (ETL/ELT)
+- **Extraire** : Apache NiFi, Kafka Connect.
+- **Transformer** : Apache Spark, Kafka, PostgreSQL.
+- **Charger** : Spark, ksqlDB.
+
+### MLOps (Machine Learning Operations)
+Gestion du cycle de vie des modèles ML via **MLflow** ou **Kubeflow**.
+- **Isolation** : Systèmes expérimentaux isolés via des pods.
+- **Workflows** : Kubeflow simplifie chaque étape (collecte, test, déploiement).
+- **Automation** : Possibilité de piloter le cluster via l'**API Python** sans utiliser `kubectl`.
+
+---
+*Document généré pour servir de référence rapide sur Kubernetes.*

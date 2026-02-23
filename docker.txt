@@ -1,0 +1,149 @@
+# Virtualisation, Conteneurisation et Docker : Guide Complet
+
+La **virtualisation** et la **conteneurisation** sont des technologies essentielles pour optimiser les ressources, déployer des applications de manière portable et scalable.
+
+## 1. Virtualisation vs Conteneurisation
+
+### Virtualisation (Machines Virtuelles)
+- Crée un ordinateur complet simulé (avec son propre OS).
+- Outils : VMware, VirtualBox, Hyper-V, KVM, Oracle VM.
+- Avantages : Isolation forte, compatibilité large.
+- Inconvénients : Plus lourd (chaque VM a son kernel).
+
+### Conteneurisation
+- Virtualisation légère au niveau applicatif.
+- Les conteneurs partagent le kernel de l’hôte → très rapide et léger.
+- Outil principal : **Docker**.
+- Orchestration : **Kubernetes**, Docker Swarm, Nomad, OpenShift.
+
+| Critère                  | Virtualisation (VM)              | Conteneurisation (Docker)         |
+|--------------------------|----------------------------------|-----------------------------------|
+| Isolation                | Complète (OS entier)             | Processus / namespaces            |
+| Kernel                   | Chaque VM a le sien              | Partagé avec l’hôte               |
+| Temps de démarrage       | Minutes                          | Secondes                          |
+| Consommation ressources  | Élevée                           | Faible                            |
+| Densité                  | Faible                           | Très élevée                       |
+| Cas d’usage principal    | Apps legacy, OS différents       | Microservices, DevOps moderne     |
+
+## 2. Docker : Concepts de Base
+
+- **Image** : Modèle immuable (template).
+- **Conteneur** : Instance exécutable d’une image.
+- **Dockerfile** : Recette textuelle pour construire une image.
+- **Docker Hub** : Registre public d’images (comme GitHub pour les images).
+
+### Architecture Docker
+- **Docker CLI** : Interface en ligne de commande (`docker ...`).
+- **Docker Daemon** (dockerd) : Service qui gère images, conteneurs, réseaux, volumes.
+- **Docker Engine** : Ensemble CLI + Daemon + containerd + runc.
+
+## 3. Commandes Docker : Guide Pratique (CLI)
+
+Toutes les commandes commencent par `docker`.
+
+### Lancer et gérer des conteneurs
+```bash
+# Lancer (interactif + terminal)
+docker run -it ubuntu bash
+
+# Lancer en arrière-plan
+docker run -d --name mon-app nginx
+
+# Avec port mapping
+docker run -d -p 8080:80 --name web nginx
+
+# Lister conteneurs
+docker ps               # En cours
+docker ps -a            # Tous (y compris arrêtés)
+docker ps -f "name=web" # Filtrer par nom
+
+# Logs
+docker logs mon-app
+docker logs -f mon-app  # Suivi en direct
+
+# Shell dans conteneur en cours
+docker exec -it mon-app bash   # ou sh
+
+# Arrêter / redémarrer
+docker stop mon-app
+docker start mon-app
+docker restart mon-app
+
+# Supprimer
+docker rm mon-app               # Doit être arrêté
+docker rm -f mon-app            # Forcer
+docker container prune          # Tous les arrêtés
+
+#Gestion des images
+# Télécharger depuis Docker Hub
+docker pull nginx
+docker pull nginx:1.25-alpine
+
+# Lister images locales
+docker images
+
+# Supprimer
+docker rmi nginx:1.25
+docker image prune -a           # Toutes les inutilisées
+#Distribuer des images
+# Taguer pour un registre
+docker tag mon-app:dev monusername/mon-app:1.0
+
+# Se connecter (Docker Hub, GitLab, etc.)
+docker login
+
+# Pousser
+docker push monusername/mon-app:1.0
+
+# Sauvegarder / charger (fichier .tar)
+docker save -o mon-app.tar monusername/mon-app:1.0
+docker load -i mon-app.tar
+#Créer des Images avec Dockerfile
+# Image de base légère (best practice 2025-2026)
+FROM node:20-alpine AS builder
+
+# Répertoire de travail
+WORKDIR /app
+
+# Copier d’abord les dépendances → cache optimal
+COPY package*.json ./
+RUN npm ci
+
+# Copier le code source
+COPY . .
+
+# Build (exemple React / Node)
+RUN npm run build
+
+# Étape finale (multi-stage build)
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+# Non-root user (sécurité)
+USER node
+
+# Port exposé
+EXPOSE 3000
+
+# Commande de démarrage
+CMD ["node", "dist/server.js"]
+FROM : image de base (préférez :alpine, :slim, versions précises → pas latest)
+WORKDIR : définit le dossier courant
+COPY : copie fichiers/dossiers
+RUN : exécute commandes pendant le build (installe paquets, télécharge, etc.)
+ENV : variables d’environnement persistantes
+ARG : variables de build (ex. --build-arg VERSION=1.2)
+EXPOSE : documente les ports (ne publie pas automatiquement)
+CMD : commande par défaut (peut être surchargée)
+ENTRYPOINT : commande principale (difficile à surcharger)
+#Commandes de build
+# Build simple
+docker build -t mon-app:1.0 .
+
+# Avec tag + pas de cache
+docker build --no-cache -t mon-app:dev .
+
+# Avec variable de build
+docker build --build-arg APP_ENV=prod -t mon-app:prod .

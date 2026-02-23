@@ -1,0 +1,149 @@
+# Virtualisation, Conteneurisation, Docker & Compose : Guide Complet
+
+Ce guide couvre les concepts essentiels de la virtualisation, de la conteneurisation avec Docker, l'optimisation des images, le networking, le stockage persistant et Docker Compose pour les applications multiconteneurs.
+
+## 1. Virtualisation vs Conteneurisation
+
+| Critère                  | Virtualisation (VM)              | Conteneurisation (Docker)         |
+|--------------------------|----------------------------------|-----------------------------------|
+| Isolation                | Complète (OS entier)             | Processus / namespaces            |
+| Kernel                   | Chaque VM a le sien              | Partagé avec l’hôte               |
+| Temps de démarrage       | Minutes                          | Secondes                          |
+| Ressources               | Élevées                          | Faibles                           |
+| Densité                  | Faible                           | Très élevée                       |
+| Usage principal          | Apps legacy, OS différents       | Microservices, DevOps moderne     |
+
+Outils VM : VMware, VirtualBox, KVM, Hyper-V.  
+Outil conteneurs : **Docker** + orchestration **Kubernetes**.
+
+## 2. Commandes Docker de Base (CLI)
+
+```bash
+docker --help                  # Liste toutes les commandes
+docker run --help              # Aide spécifique à une commande
+
+# Lancer un conteneur
+docker run -it ubuntu bash     # Interactif
+docker run -d --name app nginx # Détaché
+docker run -p 8080:80 nginx    # Port mapping
+
+docker ps -a                   # Tous les conteneurs
+docker logs -f app             # Logs en direct
+docker exec -it app bash       # Shell dedans
+docker stop/rm app
+# Stockage Persistant : Bind Mounts vs Volumes
+Chaque conteneur a son propre système de fichiers (basé sur l'image). Les modifications sont locales au conteneur.
+Bind Mounts (montage direct hôte → conteneur)
+
+Partage direct de dossiers/fichiers entre hôte et conteneur.
+Utile en dev (édition live de code).
+Syntaxe : -v /chemin/hote:/chemin/conteneur ou --mount type=bind,source=/hote,target=/conteneur
+# Volumes Docker
+Stockage persistant, isolé de l'hôte.
+Avantages : portables, backup facile, partage entre conteneurs, performances optimisées en prod.
+Recommandé par Docker pour la production.
+
+Commandes :
+Bashdocker volume create mon-volume
+docker volume ls
+docker volume inspect mon-volume
+docker volume rm mon-volume
+
+# Utilisation
+docker run -v mon-volume:/app/data -d myapp
+#Networking Docker
+Concepts de base
+
+Host : machine.
+Network : groupe de hosts.
+Ports : TCP/UDP (ex. HTTP 80, HTTPS 443).
+IP : IPv4/IPv6.
+
+Docker gère le networking pour isoler ou connecter conteneurs/hôte/internet.
+
+#Port Mapping
+docker run -p 8080:80 nginx     # hôte:8080 → conteneur:80
+docker run -P nginx
+Dans Dockerfile :
+dockerfileEXPOSE 80/tcp
+EXPOSE 443
+
+#Drivers de réseau Docker
+bridge (défaut) : conteneurs isolés + accès internet via NAT, communication entre conteneurs sur le même bridge.
+host : conteneur utilise directement le réseau de l’hôte (pas d’isolation réseau).
+none : isolation totale (pas de réseau).
+
+Commandes :
+Bashdocker network ls
+docker network create mon-reseau
+docker network rm mon-reseau
+docker network inspect mon-reseau
+
+# Attacher
+docker run --network mon-reseau ...
+# ou docker network connect mon-reseau mon-conteneur
+
+#Optimisation des Images Docker
+Les images sont composées de layers (couches) → chaque instruction Dockerfile crée une couche.
+Inspecter :
+Bashdocker image inspect mon-image | jq .RootFS.Layers
+Multi-stage builds (réduit drastiquement la taille)
+Utilise plusieurs FROM pour séparer build et runtime.
+Exemple (Go app) :
+dockerfile# Stage 1: Build
+FROM golang:1.22 AS builder
+WORKDIR /src
+COPY . .
+RUN go build -o monapp main.go
+
+# Stage 2: Runtime (image légère)
+FROM alpine:latest
+COPY --from=builder /src/monapp /usr/local/bin/monapp
+CMD ["monapp"]
+Multi-platform builds (amd64 + arm64, etc.)
+Utilise Buildx pour images cross-platform (ex. pour Raspberry Pi + serveurs cloud).
+Bashdocker buildx create --use
+docker buildx build --platform linux/amd64,linux/arm64 -t monusername/monapp:latest --push .
+#Docker Compose : Applications Multiconteneurs
+Outil pour définir et gérer des apps multiconteneurs via un fichier docker-compose.yml (YAML).
+Exemple simple (web + redis) :
+YAMLversion: '3.8'
+
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      redis:
+        condition: service_healthy   # Attend que redis soit healthy
+
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local
+Commandes :
+Bashdocker compose up          # Démarre (foreground)
+docker compose up -d       # Détaché
+docker compose down        # Arrête et supprime
+docker compose logs -f     # Logs
+docker compose ps          # État
+docker compose top         # Processus
+Dépendances (depends_on)
+
+Par défaut : attend que le conteneur démarre.
+Avec condition: service_healthy : attend le healthcheck (recommandé pour DBs, APIs).
+
+Autres sections : networks, volumes, secrets, configs.
+
